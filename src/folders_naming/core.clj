@@ -1,14 +1,15 @@
 (ns folders-naming.core
   (:use [midje.sweet])
   (:require [fs.core :as fs]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io]
+            [clojure.string :as str]))
 
 (defn list-files "List the files of a folder 'dir' with the absolute path"
   [dir]
   (map #(str dir "/" (. (io/file %) getPath)) (fs/list-dir dir)))
 
 ;; does not work as this use the global *cwd* binding and not the one provided (bug?!)
-(defn list-f "Should list the files of a folder 'dir' with the absolute path."
+(defn list-f "Should list the files ofn a folder 'dir' with the absolute path."
   [dir]
   (fs/with-cwd dir
     (map fs/absolute-path (fs/list-dir dir))))
@@ -49,3 +50,19 @@
 (fs/walk vector tmp-test-dir)
 ;; ([#<File /tmp/fs-1346434699865-1888304452> #{"a" "b"} #{"1"}] [#<File /tmp/fs-1346434699865-1888304452/b> #{} #{"3"}]
 ;; [#<File /tmp/fs-1346434699865-1888304452/a> #{} #{"2"}])
+
+;; ############################ Serious stuff
+
+(def naming-conv (comp str/join
+                       (partial interpose \-)
+                       (partial map (comp str/trim str/lower-case))
+                       #(str/split % #"(?<=[a-z])(?=[A-Z\s])")
+                       str/trim))
+
+(fact
+  (naming-conv " no-space ")                        => "no-space"
+  (naming-conv "CamelCase")                         => "camel-case"
+  (naming-conv "CamelCase ")                        => "camel-case"
+  (naming-conv "IDONOTWANTTOSEEUpperCase")          => "idonotwanttoseeupper-case"
+  (naming-conv "I-DoNotWantTo See Blank Space Too") => "i-do-not-want-to-see-blank-space-too")
+
