@@ -54,11 +54,9 @@
              ["-h" "--help"         "Show help" :default false :flag true]
              ["-f" "--files"        "Files (folder or files) to rename (list of full path files separated with comma)"])]
 
-    (clojure.pprint/pprint options)
-
-    (if (options :help)
+    (when (options :help)
       (println banner)
       (System/exit 0))
 
-    (if (options :files)
+    (when (options :files)
       (map (comp rename! io/file) (str/split (options :files) #",")))))
