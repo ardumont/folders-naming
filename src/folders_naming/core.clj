@@ -88,28 +88,26 @@
 (defn do-rename-file!
   "A function to use with the fs/walk function.
   This will walk amongst the tree arborescence and rename files."
-  [current-file _ files]
+  [current-file dirs files]
   (if (fs/directory? current-file)
     (let [current-path (. current-file getAbsolutePath)
           ren-file! (comp rename-file!
                           io/file
                           (partial str current-path "/"))]
       (doall
-       (map ren-file! files)))))
+       (map ren-file! (concat dirs files))))))
 
-(defn do-rename-dir!
-  "A function to use with the fs/walk function.
-  This will walk amongst the tree arborescence and rename folders."
-  [current-file dirs _]
-  (if (fs/directory? current-file)
-    (let [current-path (. current-file getAbsolutePath)
-          ren-file! (comp rename-file!
-                          io/file
-                          (partial str current-path "/"))]
-      (doall
-       (map ren-file! dirs)))))
+(defn list-files!
+  [root dirs files]
+  (list-files root))
 
-;; taken from https://github.com/Raynes/fs/blob/master/test/fs/core_test.clj
+(defn rename-files-and-dirs "Main function to rename the files and directory"
+  [file-root-path]
+  (let [root-path (. file-root-path getPath)
+        res (fs/walk do-rename! root-path)]
+    res))
+
+;; inspired from https://github.com/Raynes/fs/blob/master/test/fs/core_test.clj
 (defn test-create-walk-dir "Create a temporary folder to test the life, the universe and everything!"
   []
   (let [root (fs/temp-dir "fs-")
@@ -124,19 +122,8 @@
       (fs/create (fs/file subroot "This is a subfile.another_extension"))
       root)))
 
-(defn rename-files-and-dirs "Main function to rename the files and directory"
-  [file-root-path]
-  (let [root-path (. file-root-path getPath)
-        res-files (fs/walk do-rename-file! root-path)
-        res-dirs  (fs/walk do-rename-dir! root-path)]
-    [res-files res-dirs]))
-
 ;; manual test
 (let [root (test-create-walk-dir)
-      [res-files res-dirs] (rename-files-and-dirs root)]
-  (clojure.pprint/pprint res-files);; see the result
-  (clojure.pprint/pprint res-dirs);; see the result
-
+      res (rename-files-and-dirs root)]
   (clojure.pprint/pprint (fs/iterate-dir root));; see the new arbo
-  [res-files res-dirs])
-
+  res)
