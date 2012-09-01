@@ -6,7 +6,8 @@
 
 (defn list-files "List the files of a folder 'dir' with the absolute path"
   [dir]
-  (map #(str dir "/" (. (io/file %) getPath)) (fs/list-dir dir)))
+  (let [fdir (io/file dir)]
+    (map (partial fs/file fdir) (fs/list-dir dir))))
 
 ;; does not work as this use the global *cwd* binding and not the one provided (bug?!)
 (defn list-f "Should list the files of a folder 'dir' with the absolute path."
