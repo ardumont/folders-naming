@@ -79,52 +79,48 @@
     (fs/rename path npath)))
 
 (fact "rename-file!"
-  (let [temp-dir (fs/temp-dir (str "fs-"))
+  (let [temp-dir (fs/temp-dir "fs-")
         temp-dir-path (. temp-dir getAbsolutePath)
         file-for-test (io/file (str temp-dir-path "/file_To-RENAME_correctly.ext"))
         file-created? (fs/create file-for-test)]
     (rename-file! file-for-test) => true
     (fs/list-dir temp-dir-path) => (contains "file-to-rename-correctly.ext")))
 
-(defn do-rename-file!
-  "A function to use with the fs/walk function.
-  This will walk amongst the tree arborescence and rename files."
-  [current-file dirs files]
-  (if (fs/directory? current-file)
-    (let [current-path (. current-file getAbsolutePath)
-          ren-file! (comp rename-file!
-                          io/file
-                          (partial str current-path "/"))]
-      (doall
-       (map ren-file! (concat dirs files))))))
+;; a multi method to deal with the renaming of all the files in the folder root
+(defmulti rename! fs/file?)
 
-(defn list-files!
-  [root dirs files]
-  (list-files root))
+;; rename the file
+(defmethod rename! true
+  [file]
+  (rename-file! file))
 
-(defn rename-files-and-dirs "Main function to rename the files and directory"
-  [file-root-path]
-  (let [root-path (. file-root-path getPath)
-        res (fs/walk do-rename! root-path)]
-    res))
+(fact "rename!"
+  (let [temp-dir (fs/temp-dir "fs-")
+        temp-dir-path (. temp-dir getAbsolutePath)
+        file-for-test (io/file (str temp-dir-path "/file_To-RENAME_correctly.ext"))
+        file-created? (fs/create file-for-test)]
+    (rename! file-for-test) => true
+    (fs/list-dir temp-dir-path) => (contains "file-to-rename-correctly.ext")))
+
+;; rename the contents of the directory and the directory itself
+(defmethod rename! false
+  [file]
+  (do
+    (let [all-sub-files (list-files (. file getAbsolutePath))]
+      (doall (map rename! all-sub-files)))
+    (rename-file! file)))
 
 ;; inspired from https://github.com/Raynes/fs/blob/master/test/fs/core_test.clj
 (defn test-create-walk-dir "Create a temporary folder to test the life, the universe and everything!"
   []
   (let [root (fs/temp-dir "fs-")
-        dir-with-underscore (fs/file root "dir_with_underscores")]
-    (fs/mkdir (fs/file root "This is a dir with_blank space"))
+        dir-with-underscore (fs/file root "dir_with_underscores and blank")]
     (fs/mkdir dir-with-underscore)
-    (fs/create (fs/file root "toto with blank space.txt"))
-    (fs/create (fs/file root "ThisIsAFileAndBlank-space.mp4"))
-    (fs/create (fs/file root "This_is_AFileInAnd_underscore and spaces.mp4"))
+    (fs/create (fs/file root "toto with blank space_and_underscore.txt"))
     (let [subroot (fs/file (str (. dir-with-underscore getAbsolutePath) "/another_subdirectory"))]
       (fs/mkdir subroot)
       (fs/create (fs/file subroot "This is a subfile.another_extension"))
       root)))
 
 ;; manual test
-(let [root (test-create-walk-dir)
-      res (rename-files-and-dirs root)]
-  (clojure.pprint/pprint (fs/iterate-dir root));; see the new arbo
-  res)
+#_(rename! (test-create-walk-dir))
