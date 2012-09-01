@@ -75,8 +75,6 @@
         nname (naming-conv name);; we can abstract the naming-conv function here!
         ppath (fs/parent path)
         npath (str ppath "/" nname)]
-    (println "path" path)
-    (println "npath" npath)
     (fs/rename path npath)))
 
 (fact "rename-file!"
@@ -96,7 +94,6 @@
           ren-file! (comp rename-file!
                           io/file
                           (partial str current-path "/"))]
-      (println "current-path" current-path)
       (doall
        (map ren-file! files)))))
 
