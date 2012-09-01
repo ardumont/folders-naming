@@ -1,8 +1,8 @@
 (ns folders-naming.core
-  (:use [midje.sweet])
   (:require [fs.core :as fs]
             [clojure.java.io :as io]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [clojure.tools.cli :as cli]))
 
 (defn list-files "List the files of a folder 'dir' with the absolute path"
   [dir]
@@ -48,17 +48,17 @@
       (doall (map rename! all-sub-files)))
     (rename-file! file)))
 
-;; inspired from https://github.com/Raynes/fs/blob/master/test/fs/core_test.clj
-(defn test-create-walk-dir "Create a temporary folder to test the life, the universe and everything!"
-  []
-  (let [root (fs/temp-dir "fs-")
-        dir-with-underscore (fs/file root "dir_with_underscores and blank")]
-    (fs/mkdir dir-with-underscore)
-    (fs/create (fs/file root "toto with blank space_and_underscore.txt"))
-    (let [subroot (fs/file (str (. dir-with-underscore getAbsolutePath) "/another_subdirectory"))]
-      (fs/mkdir subroot)
-      (fs/create (fs/file subroot "This is a subfile.another_extension"))
-      root)))
+(defn -main [& args]
+  (let [[options args banner :as opts]
+        (cli/cli args
+             ["-h" "--help"         "Show help" :default false :flag true]
+             ["-f" "--files"        "Files (folder or files) to rename (list of full path files separated with comma)"])]
 
-;; manual test
-#_(rename! (test-create-walk-dir))
+    (clojure.pprint/pprint options)
+
+    (if (options :help)
+      (println banner)
+      (System/exit 0))
+
+    (if (options :files)
+      (map (comp rename! io/file) (str/split (options :files) #",")))))
