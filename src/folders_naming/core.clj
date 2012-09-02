@@ -49,11 +49,19 @@
       (doall (map rename! all-sub-files)))
     (rename-file! file)))
 
+(defn report "Reporting"
+  [files rfiles]
+  (reduce (fn [n [k v]] (assoc n k (map first v)))
+          {}
+          (group-by (fn [[_ r]] (true? r))
+                    (partition 2
+                               (interleave files rfiles)))))
+
 (defn -main [& args]
   (let [[options args banner :as opts]
         (cli/cli args
-             ["-h" "--help"         "Show help" :default false :flag true]
-             ["-f" "--files"        "List of comma separated files (or folders) to rename (no existing checks)."])]
+                 ["-h" "--help"         "Show help" :default false :flag true]
+                 ["-f" "--files"        "List of comma separated files (or folders) to rename (no existing checks)."])]
 
     (when (options :help)
       (println banner)
@@ -61,5 +69,17 @@
 
     (when (options :files)
       (let [files (str/split (options :files) #",")
-            rfiles (map (fn [b] (if b "Success" "Failure")) (map (comp rename! io/file) files))]
-        (clojure.pprint/pprint (split-at 2 (interleave files rfiles)))))))
+            rfiles (map (comp rename! io/file) files)
+            rep (report files rfiles)
+            success-files (rep true)
+            error-files (rep false)]
+
+        (when success-files
+          (println "Files successfully renamed:")
+          (doseq [f success-files]
+            (println "*" f)))
+
+        (when error-files
+          (println "Files with error:")
+          (doseq [f error-files]
+            (println "*" f)))))))
