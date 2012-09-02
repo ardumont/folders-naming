@@ -3,8 +3,7 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.4.0"]
                  [fs "1.3.2"]
-                 [org.clojure/tools.cli "0.2.2"]
-                 [org/jaudiotagger "2.0.3"]]
+                 [org.clojure/tools.cli "0.2.2"]]
   :profiles {:dev
              {:dependencies
               [[com.intelie/lazytest
