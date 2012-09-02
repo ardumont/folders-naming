@@ -1,8 +1,10 @@
-(ns folders-naming.core
-  (:use [folders-naming.core]
-        [midje.sweet])
+(ns folders-naming.core-test
+  (:use midje.sweet
+        folders-naming.core)
   (:require [fs.core :as fs]
             [clojure.java.io :as io]))
+
+;; ###################### play with fs.core namespace
 
 ;; to retrieve an extension from a file
 (fact "Play with extension"
@@ -16,13 +18,6 @@
 (fact "Play with home"
   (fs/absolute-path (fs/home "try")) => "/home/try")
 
-
-(fact
-  (naming-conv " no-space ")                        => "no-space"
-  (naming-conv "I-DONOTWANTTOSEEUpperCase")         => "i-donotwanttoseeuppercase"
-  (naming-conv "I-DoNotWantTo See Blank Space Too") => "i-donotwantto-see-blank-space-too"
-  (naming-conv "I-DoNotWantTo_see_underscore_too")  => "i-donotwantto-see-underscore-too"
-  (naming-conv "file_To-RENAME_correctly.ext")      => "file-to-rename-correctly.ext")
 
 (comment "Test the renaming facility!"
   (fs/mkdir  "/tmp/test")                              ;;true
@@ -40,6 +35,15 @@
   (fs/list-dir "/tmp/test")                            ;;nil
   (fs/list-dir "/tmp/test2")                           ;;("0001.txt")
 )
+
+;; ###################### test
+
+(fact
+  (naming-conv " no-space ")                        => "no-space"
+  (naming-conv "I-DONOTWANTTOSEEUpperCase")         => "i-donotwanttoseeuppercase"
+  (naming-conv "I-DoNotWantTo See Blank Space Too") => "i-donotwantto-see-blank-space-too"
+  (naming-conv "I-DoNotWantTo_see_underscore_too")  => "i-donotwantto-see-underscore-too"
+  (naming-conv "file_To-RENAME_correctly.ext")      => "file-to-rename-correctly.ext")
 
 (fact "rename-file!"
   (let [temp-dir (fs/temp-dir "fs-")
