@@ -75,3 +75,8 @@
 
 ;; manual test
 #_(rename! (test-create-walk-dir))
+
+(fact
+  (report ["some" "dummy" "file"]
+          [true false true]) => {true  ["some" "file"]
+                                 false ["dummy"]})
