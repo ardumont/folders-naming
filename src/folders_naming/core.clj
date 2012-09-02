@@ -53,11 +53,13 @@
   (let [[options args banner :as opts]
         (cli/cli args
              ["-h" "--help"         "Show help" :default false :flag true]
-             ["-f" "--files"        "Files (folder or files) to rename (list of full path files separated with comma)"])]
+             ["-f" "--files"        "List of comma separated files (or folders) to rename (no existing checks)."])]
 
     (when (options :help)
       (println banner)
       (System/exit 0))
 
     (when (options :files)
-      (map (comp rename! io/file) (str/split (options :files) #",")))))
+      (let [files (str/split (options :files) #",")
+            rfiles (map (fn [b] (if b "Success" "Failure")) (map (comp rename! io/file) files))]
+        (clojure.pprint/pprint (split-at 2 (interleave files rfiles)))))))
