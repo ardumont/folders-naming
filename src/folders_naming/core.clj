@@ -15,13 +15,14 @@
   (fs/with-cwd dir
     (map fs/absolute-path (fs/list-dir dir))))
 
-(def naming-conv (comp str/join
-                       (partial interpose \-)
-                       (partial map (comp str/lower-case
-                                          #(str/replace % #"_" "")
-                                          str/trim))
-                       #(str/split % #"_|\s")
-                       str/trim))
+(def ^{:doc "the function to rename the folder or file accordingly" }
+  naming-conv (comp str/join
+                    (partial interpose \-)
+                    (partial map (comp str/lower-case
+                                       #(str/replace % #"_" "")
+                                       str/trim))
+                    #(str/split % #"_|\s")
+                    str/trim))
 
 (defn rename-file! "Rename a file according to the naming convention"
   [file]
